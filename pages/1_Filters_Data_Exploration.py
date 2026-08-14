@@ -3,51 +3,23 @@ import pandas as pd
 import sqlite3
 import os
 
-
 st.title("Filters & Data Exploration")
 
-
 db_path = "crypto_market.db"
+
 conn = sqlite3.connect(
     db_path,
     check_same_thread=False
 )
-
-
-
-date_query = """
-SELECT
-    MIN(date) AS min_date,
-    MAX(date) AS max_date
-FROM crypto_prices
-"""
-
-date_df = pd.read_sql_query(
-    date_query,
-    conn
-)
-
-
-min_date = pd.to_datetime(
-    date_df["min_date"].iloc[0]
-).date()
-
-max_date = pd.to_datetime(
-    date_df["max_date"].iloc[0]
-).date()
-
-
-# ------------------------------------------------------------
-# DATE FILTER
-# ------------------------------------------------------------
+import datetime
 
 selected_dates = st.date_input(
     "Select Date Range",
-    value=(min_date, max_date),
-    min_value=min_date,
-    max_value=max_date
+    value=(
+        datetime.date(2025, 1, 1),
+        datetime.date(2025, 12, 31)
+    )
 )
-
 
 if len(selected_dates) == 2:
 
@@ -57,7 +29,6 @@ if len(selected_dates) == 2:
     st.write(
         f"Selected period: {start_date} to {end_date}"
     )
-
 
     # --------------------------------------------------------
     # BITCOIN AVERAGE
