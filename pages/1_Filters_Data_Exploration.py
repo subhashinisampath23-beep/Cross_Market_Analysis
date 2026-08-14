@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 import os
+import datetime
 
 st.title("Filters & Data Exploration")
 
@@ -11,7 +12,22 @@ conn = sqlite3.connect(
     db_path,
     check_same_thread=False
 )
-import datetime
+st.write("Database date check")
+
+check_query = """
+SELECT
+    MIN(date) AS first_date,
+    MAX(date) AS last_date,
+    COUNT(*) AS total_records
+FROM crypto_prices
+"""
+
+check_df = pd.read_sql_query(
+    check_query,
+    conn
+)
+
+st.write(check_df)
 
 selected_dates = st.date_input(
     "Select Date Range",
