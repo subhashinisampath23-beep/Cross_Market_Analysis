@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -7,8 +6,12 @@ import sqlite3
 st.title("SQL Query Runner")
 
 
+# ------------------------------------------------------------
+# DATABASE CONNECTION
+# ------------------------------------------------------------
 
 db_path = "crypto_market.db"
+
 conn = sqlite3.connect(
     db_path,
     check_same_thread=False
@@ -16,7 +19,7 @@ conn = sqlite3.connect(
 
 
 # ------------------------------------------------------------
-# SQL QUERIES
+# PREDEFINED SQL QUERIES
 # ------------------------------------------------------------
 
 queries = {
@@ -33,7 +36,7 @@ queries = {
     LIMIT 3
     """,
 
-    "2. Supply Exceeds 90%": """
+    "2. Circulating Supply Above 90%": """
     SELECT
         id,
         name,
@@ -61,7 +64,7 @@ queries = {
       AND current_price >= 0.90 * ath
     """,
 
-    "4. Average Market Cap Rank Above $1B Volume": """
+    "4. Average Market Cap Rank - Volume Above $1B": """
     SELECT
         AVG(market_cap_rank)
         AS average_market_cap_rank
@@ -90,13 +93,49 @@ queries = {
     WHERE coin_id = 'ethereum'
     """,
 
-    "8. Highest Oil Price": """
+    "8. Bitcoin Daily Price Trend": """
+    SELECT
+        date,
+        price_usd
+    FROM crypto_prices
+    WHERE coin_id = 'bitcoin'
+    ORDER BY date
+    """,
+
+    "9. Highest Average Crypto Price": """
+    SELECT
+        coin_id,
+        AVG(price_usd) AS average_price
+    FROM crypto_prices
+    GROUP BY coin_id
+    ORDER BY average_price DESC
+    LIMIT 1
+    """,
+
+    "10. Bitcoin Percentage Change": """
+    SELECT
+        MIN(CASE
+            WHEN date BETWEEN '2024-09-01'
+            AND '2024-09-30'
+            THEN price_usd
+        END) AS sep_2024_price,
+
+        MIN(CASE
+            WHEN date BETWEEN '2025-09-01'
+            AND '2025-09-30'
+            THEN price_usd
+        END) AS sep_2025_price
+    FROM crypto_prices
+    WHERE coin_id = 'bitcoin'
+    """,
+
+    "11. Highest Oil Price": """
     SELECT
         MAX(price_usd) AS highest_oil_price
     FROM oil_prices
     """,
 
-    "9. Average Oil Price Per Year": """
+    "12. Average Oil Price Per Year": """
     SELECT
         strftime('%Y', date) AS year,
         AVG(price_usd) AS average_oil_price
@@ -105,7 +144,7 @@ queries = {
     ORDER BY year
     """,
 
-    "10. COVID Oil Prices": """
+    "13. COVID Crash Oil Prices": """
     SELECT
         date,
         price_usd
@@ -115,7 +154,7 @@ queries = {
     ORDER BY date
     """,
 
-    "11. Lowest Oil Price": """
+    "14. Lowest Oil Price": """
     SELECT
         date,
         price_usd
@@ -124,7 +163,7 @@ queries = {
     LIMIT 1
     """,
 
-    "12. Oil Volatility Per Year": """
+    "15. Oil Volatility Per Year": """
     SELECT
         strftime('%Y', date) AS year,
         MAX(price_usd) AS maximum_price,
@@ -136,14 +175,21 @@ queries = {
     ORDER BY year
     """,
 
-    "13. Highest NASDAQ Close": """
+    "16. All Prices for S&P 500": """
+    SELECT *
+    FROM stock_prices
+    WHERE ticker = '^GSPC'
+    ORDER BY date
+    """,
+
+    "17. Highest NASDAQ Closing Price": """
     SELECT
         MAX(close) AS highest_nasdaq_close
     FROM stock_prices
     WHERE ticker = '^IXIC'
     """,
 
-    "14. Top 5 S&P 500 Price Differences": """
+    "18. Top 5 S&P 500 Price Differences": """
     SELECT
         date,
         high,
@@ -155,7 +201,7 @@ queries = {
     LIMIT 5
     """,
 
-    "15. Monthly Average Closing Price": """
+    "19. Monthly Average Closing Price": """
     SELECT
         ticker,
         strftime('%Y-%m', date) AS month,
@@ -165,16 +211,16 @@ queries = {
     ORDER BY month, ticker
     """,
 
-    "16. Average NIFTY Volume 2024": """
+    "20. Average NIFTY Volume - 2024": """
     SELECT
         AVG(volume) AS average_nifty_volume
     FROM stock_prices
     WHERE ticker = '^NSEI'
-    AND date BETWEEN '2024-01-01'
-    AND '2024-12-31'
+      AND date BETWEEN '2024-01-01'
+      AND '2024-12-31'
     """,
 
-    "17. Bitcoin vs Oil": """
+    "21. Bitcoin vs Oil": """
     SELECT
         c.date,
         c.price_usd AS bitcoin_price,
@@ -186,7 +232,7 @@ queries = {
     ORDER BY c.date
     """,
 
-    "18. Bitcoin vs S&P 500": """
+    "22. Bitcoin vs S&P 500": """
     SELECT
         c.date,
         c.price_usd AS bitcoin_price,
@@ -195,11 +241,11 @@ queries = {
     INNER JOIN stock_prices s
         ON c.date = s.date
     WHERE c.coin_id = 'bitcoin'
-    AND s.ticker = '^GSPC'
+      AND s.ticker = '^GSPC'
     ORDER BY c.date
     """,
 
-    "19. Ethereum vs NASDAQ": """
+    "23. Ethereum vs NASDAQ": """
     SELECT
         c.date,
         c.price_usd AS ethereum_price,
@@ -208,11 +254,11 @@ queries = {
     INNER JOIN stock_prices s
         ON c.date = s.date
     WHERE c.coin_id = 'ethereum'
-    AND s.ticker = '^IXIC'
+      AND s.ticker = '^IXIC'
     ORDER BY c.date
     """,
 
-    "20. Bitcoin + Oil + S&P 500": """
+    "24. Bitcoin + Oil + S&P 500": """
     SELECT
         c.date,
         c.price_usd AS bitcoin_price,
@@ -224,14 +270,14 @@ queries = {
     INNER JOIN stock_prices s
         ON c.date = s.date
     WHERE c.coin_id = 'bitcoin'
-    AND s.ticker = '^GSPC'
+      AND s.ticker = '^GSPC'
     ORDER BY c.date
     """
 }
 
 
 # ------------------------------------------------------------
-# SELECT QUERY
+# QUERY SELECTION
 # ------------------------------------------------------------
 
 selected_query = st.selectbox(
@@ -241,7 +287,7 @@ selected_query = st.selectbox(
 
 
 # ------------------------------------------------------------
-# DISPLAY SQL
+# DISPLAY SQL QUERY
 # ------------------------------------------------------------
 
 st.subheader("SQL Query")
@@ -253,7 +299,7 @@ st.code(
 
 
 # ------------------------------------------------------------
-# RUN
+# RUN QUERY
 # ------------------------------------------------------------
 
 if st.button("Run Query"):
