@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import sqlite3
@@ -7,9 +6,12 @@ import sqlite3
 st.title("Top 3 Crypto Analysis")
 
 
-
+# ------------------------------------------------------------
+# DATABASE CONNECTION
+# ------------------------------------------------------------
 
 db_path = "crypto_market.db"
+
 conn = sqlite3.connect(
     db_path,
     check_same_thread=False
@@ -17,7 +19,7 @@ conn = sqlite3.connect(
 
 
 # ------------------------------------------------------------
-# TOP 3 CRYPTO
+# GET TOP 3 CRYPTOCURRENCIES
 # ------------------------------------------------------------
 
 top_crypto_query = """
@@ -39,7 +41,7 @@ top_crypto_df = pd.read_sql_query(
 
 
 # ------------------------------------------------------------
-# SELECT CRYPTO
+# SELECT CRYPTOCURRENCY
 # ------------------------------------------------------------
 
 selected_coin = st.selectbox(
@@ -57,7 +59,7 @@ st.subheader(selected_name)
 
 
 # ------------------------------------------------------------
-# DATE RANGE
+# GET ACTUAL DATE RANGE FOR SELECTED COIN
 # ------------------------------------------------------------
 
 date_query = """
@@ -74,7 +76,6 @@ date_df = pd.read_sql_query(
     params=(selected_coin,)
 )
 
-
 min_date = pd.to_datetime(
     date_df["min_date"].iloc[0]
 ).date()
@@ -83,6 +84,10 @@ max_date = pd.to_datetime(
     date_df["max_date"].iloc[0]
 ).date()
 
+
+# ------------------------------------------------------------
+# DATE FILTER
+# ------------------------------------------------------------
 
 selected_dates = st.date_input(
     "Select Date Range",
@@ -99,7 +104,7 @@ if len(selected_dates) == 2:
 
 
     # --------------------------------------------------------
-    # PRICE QUERY
+    # GET DAILY PRICES
     # --------------------------------------------------------
 
     price_query = """
@@ -108,7 +113,7 @@ if len(selected_dates) == 2:
         price_usd
     FROM crypto_prices
     WHERE coin_id = ?
-    AND date BETWEEN ? AND ?
+      AND date BETWEEN ? AND ?
     ORDER BY date
     """
 
@@ -124,7 +129,7 @@ if len(selected_dates) == 2:
 
 
     # --------------------------------------------------------
-    # TABLE
+    # DAILY PRICE TABLE
     # --------------------------------------------------------
 
     st.subheader("Daily Price Table")
@@ -136,7 +141,7 @@ if len(selected_dates) == 2:
 
 
     # --------------------------------------------------------
-    # CHART
+    # LINE CHART
     # --------------------------------------------------------
 
     if not price_df.empty:
